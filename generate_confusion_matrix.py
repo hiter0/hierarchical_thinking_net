@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 from utils import *
+from algorithm import answer_rank_default
 def rectify_predict(target_row_number):
     # 存储所有的预测结果
     predictions = []# 存储所有出现过的类别
@@ -41,21 +42,13 @@ def rectify_predict(target_row_number):
 
     # 打印混淆矩阵
     print(confusion_matrix)
+    classes_list = list(class_to_index.keys())
+    reordered_index, _ = answer_rank_default(confusion_matrix, classes_list)
+    optimal_matrix = confusion_matrix[np.ix_(reordered_index, reordered_index)]
+    reordered_classes = [classes_list[i] for i in reordered_index]
+    # print(classes)
 
-    confusion_matrix, class_to_index = filter_matrix(confusion_matrix, class_to_index)
-    result, perms = find_optimal_permutations(confusion_matrix)
-    # print(result)
-
-    optimal_matrix, optimal_indice = compare_diag(result)
-    new_order = perms[optimal_indice]
-    print(optimal_matrix)
-    print(new_order)
-    print('len(perms):' + str(len(perms)))
-
-    classes = [class_to_index[i] for i in new_order]
-    print(classes)
-
-    return optimal_matrix, classes
+    return optimal_matrix, reordered_classes
 
 def visualize_matrix(matrix, classes, i):
 
@@ -75,19 +68,16 @@ def visualize_matrix(matrix, classes, i):
     plt.yticks(rotation=0)  # 旋转列的刻度标签，使其更易阅读
     plt.xlabel('Predict:TOP2')
     plt.ylabel('Answer:TOP1')
-    output_dir = 'confusion_matrix'
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    output_dir = 'output/confusion_matrix'
+    plt.savefig(f'{output_dir}/{title}.png')
     print(f'{output_dir}/{title}.png')
-    plt.savefig(f'output/{output_dir}/{title}.png')
+
     # 显示图形
     # plt.show()
     plt.clf()
 
 def main():
-    # sample_index = [i for i in range(0, 212)]
-    sample_index = [i for i in range(213, 236)]
-    # 计算量异常的编号212
+    sample_index = [i for i in range(0, 236)]
     for i in sample_index:
         rectified_matrix, rectified_classes = rectify_predict(i)
         visualize_matrix(rectified_matrix, rectified_classes, i)
